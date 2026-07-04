@@ -409,15 +409,21 @@
         const data = await res.json().catch(() => null);
 
         if (!res.ok) {
-          // FastAPI puts human-readable errors in `detail` (string for our
-          // HTTPExceptions, array for pydantic validation errors).
-          let detail = "Something went wrong. Please try again.";
-          if (data && typeof data.detail === "string") {
-            detail = data.detail;
-          } else if (data && Array.isArray(data.detail) && data.detail[0]?.msg) {
-            detail = data.detail[0].msg;
+          // Curate messages by status so raw upstream/exception text is never
+          // shown to the user. Our 400s are already user-friendly (e.g. beyond
+          // the forecast horizon); everything else gets a clean fallback.
+          let message;
+          if (res.status === 400 && data && typeof data.detail === "string") {
+            message = data.detail;
+          } else if (res.status === 422) {
+            message = "Please choose a valid date.";
+          } else if (res.status >= 502 && res.status <= 504) {
+            message =
+              "Live weather data is temporarily unavailable right now. Try a past date, or check back soon.";
+          } else {
+            message = "Something went wrong. Please try again.";
           }
-          renderError(detail);
+          renderError(message);
           return;
         }
 

@@ -1,3 +1,4 @@
+import logging
 from datetime import date as date_type
 
 from fastapi import FastAPI, HTTPException
@@ -6,6 +7,15 @@ from fastapi.middleware.cors import CORSMiddleware
 import model_service
 import weather
 from schemas import PredictRequest, PredictResponse
+
+logger = logging.getLogger("rain_predictor")
+
+# User-facing message for upstream weather failures. The technical cause is
+# logged server-side; we never leak raw exception strings to the client.
+WEATHER_UNAVAILABLE_MESSAGE = (
+    "Live weather data is temporarily unavailable. Please try again shortly, "
+    "or pick a past date."
+)
 
 app = FastAPI(title="Santo Domingo Rain Predictor", version="1.0.0")
 
@@ -40,7 +50,8 @@ def predict(request: PredictRequest) -> PredictResponse:
         try:
             weather_values = weather.fetch_forecast_day(requested_date)
         except weather.WeatherLookupError as exc:
-            raise HTTPException(status_code=502, detail=f"Could not retrieve forecast: {exc}") from exc
+            logger.warning("Forecast lookup failed for %s: %s", requested_date, exc)
+            raise HTTPException(status_code=502, detail=WEATHER_UNAVAILABLE_MESSAGE) from exc
         source = "forecast"
     else:
         cached = model_service.lookup_cached_day(requested_date)
@@ -55,9 +66,9 @@ def predict(request: PredictRequest) -> PredictResponse:
                 try:
                     weather_values, source = weather.fetch_forecast_day(requested_date), "forecast"
                 except weather.WeatherLookupError as exc:
+                    logger.warning("Weather lookup failed for %s: %s", requested_date, exc)
                     raise HTTPException(
-                        status_code=502,
-                        detail=f"Could not retrieve weather data for {requested_date}: {exc}",
+                        status_code=502, detail=WEATHER_UNAVAILABLE_MESSAGE
                     ) from exc
 
     probability = model_service.predict_rain_probability(weather_values, requested_date)
