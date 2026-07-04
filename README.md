@@ -95,7 +95,7 @@ rain-predictor/
 
 ## Running locally
 
-Requires Python 3.11+.
+Requires Python 3.12+ (the pinned `numpy`/`scipy` builds need ≥3.12; developed and deployed on 3.13).
 
 ### 1. Set up the environment
 
