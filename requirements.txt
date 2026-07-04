@@ -1,11 +1,18 @@
+# Core ML stack — pinned so the committed model/model.pkl loads without
+# version-mismatch warnings and retraining reproduces the same environment.
+scikit-learn==1.9.0
+joblib==1.5.3
+numpy==2.5.0
+scipy==1.18.0
+pandas==3.0.3
+
+# Data + notebooks
 requests
-pandas
-numpy
-scikit-learn
-joblib
 matplotlib
 seaborn
 ipykernel
+
+# API
 fastapi
 uvicorn[standard]
 pydantic

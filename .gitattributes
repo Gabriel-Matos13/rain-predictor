@@ -1,0 +1,11 @@
+# Normalize line endings across platforms
+* text=auto eol=lf
+
+# Binary artifacts — never normalize
+*.pkl binary
+*.png binary
+*.jpg binary
+*.ico binary
+
+# Notebooks: keep as-is, treat as text for diffing
+*.ipynb text

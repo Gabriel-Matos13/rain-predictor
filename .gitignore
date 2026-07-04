@@ -3,3 +3,8 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 .env
+
+# Editor / tooling (machine-specific)
+.claude/
+.vscode/
+.idea/
